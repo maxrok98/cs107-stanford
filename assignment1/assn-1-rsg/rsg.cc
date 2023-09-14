@@ -6,7 +6,7 @@
  * and map classes as well as the custom Production and Definition
  * classes provided with the assignment.
  */
- 
+
 #include <map>
 #include <fstream>
 #include "definition.h"
@@ -39,6 +39,26 @@ static void readGrammar(ifstream& infile, map<string, Definition>& grammar)
   }
 }
 
+static bool isNonTerminal(string word) {
+		return word[0] == '<';
+}
+
+static void expandDefinition(map<string, Definition>& grammar, string definition) {
+	auto currProd = grammar[definition].getRandomProduction();
+	auto prodIter = currProd.begin();
+	for(;prodIter != currProd.end(); prodIter++) {
+		if(isNonTerminal(*prodIter))
+			expandDefinition(grammar, *prodIter);
+		else
+			cout << *prodIter << ' ';
+	}
+}
+
+static void generateRandomSentence(map<string, Definition>& grammar) {
+	expandDefinition(grammar, string("<start>"));
+	cout << endl;
+}
+
 /**
  * Performs the rudimentary error checking needed to confirm that
  * the client provided a grammar file.  It then continues to
@@ -60,20 +80,21 @@ int main(int argc, char *argv[])
   if (argc == 1) {
     cerr << "You need to specify the name of a grammar file." << endl;
     cerr << "Usage: rsg <path to grammar text file>" << endl;
-    return 1; // non-zero return value means something bad happened 
+    return 1; // non-zero return value means something bad happened
   }
-  
+
   ifstream grammarFile(argv[1]);
   if (grammarFile.fail()) {
     cerr << "Failed to open the file named \"" << argv[1] << "\".  Check to ensure the file exists. " << endl;
     return 2; // each bad thing has its own bad return value
   }
-  
+
   // things are looking good...
   map<string, Definition> grammar;
   readGrammar(grammarFile, grammar);
   cout << "The grammar file called \"" << argv[1] << "\" contains "
        << grammar.size() << " definitions." << endl;
-  
+
+	generateRandomSentence(grammar);
   return 0;
 }
